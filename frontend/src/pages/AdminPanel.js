@@ -21,6 +21,8 @@ import PromotionsManagement from '../components/admin/PromotionsManagement';
 import PopularCategoriesManagement from '../components/admin/PopularCategoriesManagement';
 import CustomSectionsManagement from '../components/admin/CustomSectionsManagement';
 import ReviewsManagement from '../components/admin/ReviewsManagement';
+import ReturnsDashboard from '../components/admin/ReturnsDashboard';
+import PolicyDashboard from '../components/admin/PolicyDashboard';
 
 const AdminPanel = () => {
   const { isAdmin, loading } = useAuth();
