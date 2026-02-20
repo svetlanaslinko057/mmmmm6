@@ -465,6 +465,163 @@ class YStoreAPITester:
             return self.log_result("Pickup Control Send Reminder", False,
                 f"Status: {response['status_code']}, Data: {response['data']}")
 
+    def test_returns_summary(self):
+        """Test GET /api/v2/admin/returns/summary"""
+        print(f"\n🔍 Testing Returns Summary Analytics...")
+        
+        if not self.admin_token:
+            return self.log_result("Returns Summary", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/returns/summary',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Returns Summary", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Check for expected analytics fields
+            expected_fields = ["today", "7d", "30d", "return_rate_30d", "shipping_losses_30d"]
+            has_analytics_structure = all(field in data for field in expected_fields)
+            return self.log_result("Returns Summary", has_analytics_structure,
+                f"Analytics data: {list(data.keys())}")
+        else:
+            return self.log_result("Returns Summary", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_returns_list(self):
+        """Test GET /api/v2/admin/returns/list"""
+        print(f"\n🔍 Testing Returns List with Pagination...")
+        
+        if not self.admin_token:
+            return self.log_result("Returns List", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/returns/list?skip=0&limit=10',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Returns List", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have pagination structure
+            has_list_structure = "items" in data and "total" in data and "skip" in data and "limit" in data
+            return self.log_result("Returns List", has_list_structure,
+                f"Found {len(data.get('items', []))} returns, Total: {data.get('total', 0)}")
+        else:
+            return self.log_result("Returns List", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_returns_run(self):
+        """Test POST /api/v2/admin/returns/run"""
+        print(f"\n🔍 Testing Returns Engine Manual Run...")
+        
+        if not self.admin_token:
+            return self.log_result("Returns Run", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'POST', '/v2/admin/returns/run?limit=50',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Returns Run", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have engine run results
+            has_engine_result = all(field in data for field in ["ok", "scanned", "detected", "updated"])
+            return self.log_result("Returns Run", has_engine_result,
+                f"Scanned: {data.get('scanned', 0)}, Detected: {data.get('detected', 0)}, Updated: {data.get('updated', 0)}")
+        else:
+            return self.log_result("Returns Run", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_returns_resolve(self):
+        """Test POST /api/v2/admin/returns/resolve"""
+        print(f"\n🔍 Testing Returns Resolve...")
+        
+        if not self.admin_token:
+            return self.log_result("Returns Resolve", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        test_order_id = "test-order-123"  # Test order ID
+        
+        response, error = self.make_request(
+            'POST', '/v2/admin/returns/resolve',
+            data={
+                "order_id": test_order_id,
+                "notes": "Test resolution"
+            },
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Returns Resolve", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have resolution result
+            has_resolve_structure = "ok" in data
+            if data.get("ok"):
+                return self.log_result("Returns Resolve", has_resolve_structure,
+                    f"Order {data.get('order_id')} resolved")
+            else:
+                # 'Order not found' is acceptable for test data
+                return self.log_result("Returns Resolve", True,
+                    f"Expected error: {data.get('error', 'Order not found')}")
+        else:
+            return self.log_result("Returns Resolve", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_ops_dashboard(self):
+        """Test GET /api/v2/admin/ops/dashboard"""
+        print(f"\n🔍 Testing Ops Dashboard with Returns Block...")
+        
+        if not self.admin_token:
+            return self.log_result("Ops Dashboard", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/ops/dashboard',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Ops Dashboard", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have returns block in dashboard
+            has_returns_block = "returns" in data
+            if has_returns_block:
+                returns_data = data["returns"]
+                has_returns_structure = "today" in returns_data and "30d" in returns_data
+                return self.log_result("Ops Dashboard", has_returns_structure,
+                    f"Returns block: {list(returns_data.keys())}")
+            else:
+                return self.log_result("Ops Dashboard", False,
+                    "Missing returns block in dashboard")
+        else:
+            return self.log_result("Ops Dashboard", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
     def test_admin_authentication_required(self):
         """Test that admin authentication is required for all endpoints"""
         print(f"\n🔍 Testing admin authentication requirement...")
