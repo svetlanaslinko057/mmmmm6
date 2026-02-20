@@ -1,99 +1,108 @@
 # Y-Store Marketplace - PRD
 
 ## Original Problem Statement
-Клонувати репозиторій https://github.com/svetlanaslinko057/bbbbbb
-Підняти фронт, бек, базу даних MongoDB
-Вивчити структуру коду, архітектуру, адмінку
-Продовжити доробку O20.3 Return Management Engine
+Клонувати репозиторій https://github.com/svetlanaslinko057/bbbbbb, підняти фронт/бек/MongoDB, вивчити структуру, продовжити доробку:
+- O20.3 Return Management Engine (✅ DONE)
+- O20.4 Return Dashboard UI (✅ DONE)  
+- O20.5 Return Policy Engine (✅ DONE)
+- O20.6 Policy Control Center (✅ DONE)
 
 ## Architecture
-- **Frontend**: React 19, TailwindCSS, Radix UI
+- **Frontend**: React 19, TailwindCSS, Radix UI, Recharts
 - **Backend**: FastAPI (Python 3.11), modular architecture
 - **Database**: MongoDB (Motor async driver)
-- **Bot**: Aiogram 3.x Telegram bot
-- **Integrations**: Nova Poshta API, RozetkaPay, Fondy, AI (OpenAI)
-
-## Tech Stack
-- FastAPI with async/await
-- MongoDB with Motor
-- JWT authentication
-- APScheduler for background jobs
-- Aiogram for Telegram bot
+- **Bot**: Aiogram 3.x Telegram bot @YStore_a_bot
+- **Integrations**: Nova Poshta API, AI (OpenAI via Emergent)
 
 ## What's Been Implemented
 
 ### Session 2026-02-20
-- [x] Cloned repository and set up environment
-- [x] Configured .env files (backend + frontend)
-- [x] Added Emergent LLM Key
-- [x] Added Telegram Bot Token
-- [x] Added Nova Poshta API Key
 
-### O20.3 Return Management Engine - COMPLETED
-- [x] `/app/backend/modules/returns/return_types.py` - Types (ReturnDetection, ReturnStage, ReturnReason)
-- [x] `/app/backend/modules/returns/return_mapping.py` - NP status mapping for return detection
-- [x] `/app/backend/modules/returns/return_repo.py` - Repository (idempotency, ledger, CRM, alerts)
-- [x] `/app/backend/modules/returns/return_engine.py` - Main processing engine
-- [x] `/app/backend/modules/returns/return_analytics.py` - KPI calculations
-- [x] `/app/backend/modules/returns/return_scheduler.py` - Background scheduler
-- [x] `/app/backend/modules/returns/return_routes.py` - API endpoints
+#### O20.3 Return Management Engine ✅
+- `/app/backend/modules/returns/return_types.py` - Types
+- `/app/backend/modules/returns/return_mapping.py` - NP status mapping  
+- `/app/backend/modules/returns/return_repo.py` - Repository
+- `/app/backend/modules/returns/return_engine.py` - Detection engine
+- `/app/backend/modules/returns/return_analytics.py` - KPI calculations
+- `/app/backend/modules/returns/return_routes.py` - API endpoints
 
-### O20.3 API Endpoints
-- `POST /api/v2/admin/returns/run` - Manual trigger return engine
-- `GET /api/v2/admin/returns/list` - List returns with pagination
-- `GET /api/v2/admin/returns/summary` - Return analytics KPIs
-- `GET /api/v2/admin/returns/trend` - Daily return trend
+API Endpoints:
+- `POST /api/v2/admin/returns/run` - Manual trigger
+- `GET /api/v2/admin/returns/list` - List returns
+- `GET /api/v2/admin/returns/summary` - KPIs
+- `GET /api/v2/admin/returns/trend` - Daily trend for charts
 - `GET /api/v2/admin/returns/risk-customers` - High-risk customers
-- `POST /api/v2/admin/returns/resolve` - Mark return resolved
-- `POST /api/v2/admin/returns/find` - Find by TTN
-- `POST /api/v2/admin/returns/process-ttn` - Process single TTN
+- `POST /api/v2/admin/returns/resolve` - Mark resolved
 
-### O20.3 Telegram Bot Commands
-- `/returns_today` - Return KPIs summary
-- `/returns_risk` - High-risk customers
-- `/return_find <ttn>` - Find return by TTN
+Bot Commands: `/returns_today`, `/returns_risk`, `/return_find <ttn>`
 
-### O20.4 Ops Dashboard Integration
-- [x] Returns block added to `/api/v2/admin/ops/dashboard`
-- [x] KPIs: today, 7d, 30d returns
-- [x] Return rate, COD refusal rate
-- [x] Shipping losses
-- [x] Top reasons, top cities
+#### O20.4 Return Dashboard UI ✅
+- `/app/frontend/src/components/admin/ReturnsDashboard.js`
+- KPI cards (returns today, 30d, rate, losses)
+- Trend charts (returns, losses)
+- Top reasons/cities bar charts
+- Returns table with resolve action
+- Tab "Повернення" in AdminPanel
 
-## Core Features (Existing)
-- Product catalog with categories
-- Shopping cart
-- Order management with state machine
-- Payment integrations (Stripe, Fondy, RozetkaPay)
-- Nova Poshta TTN creation
-- CRM with customer segmentation
-- Admin panel
-- Risk scoring
-- Guard (fraud detection)
-- Pickup control
+#### O20.5 Return Policy Engine ✅
+- `/app/backend/modules/returns/policy_types.py` - PolicyDecision types
+- `/app/backend/modules/returns/policy_repo.py` - Repository + audit
+- `/app/backend/modules/returns/policy_engine.py` - Rule engine
+- `/app/backend/modules/returns/policy_scheduler.py` - Scheduler (30 min)
 
-## User Personas
-1. **Customer** - Browse, buy, track orders
-2. **Admin** - Manage orders, products, returns
-3. **Operator** - Handle logistics, returns
+Rules:
+- cod_refusals_30d >= 2 → BLOCK_COD_CUSTOMER
+- returns_60d >= 2 → REQUIRE_PREPAID_CUSTOMER
+- returns_60d >= 3 → BLOCK_COD_CUSTOMER
+- city_return_rate_30d >= 15% (30+ orders) → REQUIRE_PREPAID_CITY
 
-## Next Action Items (P0)
-1. O20.4 - Return KPI Admin UI page
-2. Return Policy Engine (auto-block COD)
-3. City Risk Heatmap
+#### O20.6 Policy Control Center ✅
+- `/app/backend/modules/returns/policy_routes.py`
+- `/app/frontend/src/components/admin/PolicyDashboard.js`
 
-## Backlog (P1)
-- Predictive return probability
-- Auto-cancel 30+ days orders
-- Viber/SMS fallback notifications
-- Return analytics charts in admin
+API Endpoints:
+- `POST /api/v2/admin/returns/policy/run` - Run engine
+- `GET /api/v2/admin/returns/policy/pending` - Pending approvals
+- `GET /api/v2/admin/returns/policy/history` - History
+- `GET /api/v2/admin/returns/policy/cities` - City policies
+- `POST /api/v2/admin/returns/policy/approve` - Approve action
+- `POST /api/v2/admin/returns/policy/reject` - Reject action
+- `POST /api/v2/admin/returns/policy/manual` - Manual override
+- `GET /api/v2/admin/returns/policy/customer/{phone}` - Customer policy
+- `DELETE /api/v2/admin/returns/policy/city/{city}` - Remove city policy
 
-## Known Issues
-- External URL routing issue (preview environment config)
-- broadcast_wizard has a minor bug with db["bot_keyboards"] call
+Bot Callbacks: `policy:approve:*`, `policy:reject:*`
+
+## Ops Dashboard
+`/api/v2/admin/ops/dashboard` now includes:
+- `returns` block with all KPIs
+
+## Bot Commands
+- `/start`, `/menu` - Main menu
+- `/returns_today` - Return KPIs
+- `/returns_risk` - Risk customers
+- `/return_find <ttn>` - Find return
+- `/pickup_today`, `/pickup_risk` - Pickup control
+- Policy inline buttons (approve/reject)
 
 ## Environment
-- Backend: `http://localhost:8001`
-- Frontend: `http://localhost:3000`
-- MongoDB: `mongodb://localhost:27017`
-- Telegram Bot: Running (pid exists)
+- Backend: localhost:8001
+- Frontend: localhost:3000 (proxy to backend)
+- MongoDB: localhost:27017
+- Telegram Bot: @YStore_a_bot (running)
+
+## Next Action Items (P0)
+1. Frontend login fix (proxy added, may need full rebuild)
+2. Seed test return data for demo
+3. Production deployment setup
+
+## Backlog (P1)
+- Return Policy Engine refinements (VIP exclusions, LTV thresholds)
+- City Risk Heatmap visualization
+- Viber/SMS notifications
+- Auto-cancel 30+ day orders
+- Predictive return probability (ML)
+
+## Known Issues
+- Frontend login may need manual rebuild (`yarn build`)
+- External preview URL routing depends on K8s ingress config
