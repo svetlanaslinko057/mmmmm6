@@ -561,8 +561,9 @@ class YStoreAPITester:
         test_order_id = "test-order-123"  # Test order ID
         
         response, error = self.make_request(
-            'POST', f'/v2/admin/returns/resolve?order_id={test_order_id}',
+            'POST', f'/v2/admin/returns/resolve',
             data={
+                "order_id": test_order_id,
                 "notes": "Test resolution"
             },
             headers=headers,
@@ -585,6 +586,120 @@ class YStoreAPITester:
                     f"Expected error: {data.get('error', 'Order not found')}")
         else:
             return self.log_result("Returns Resolve", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_returns_trend(self):
+        """Test GET /api/v2/admin/returns/trend?days=30 - MAIN REQUIREMENT"""
+        print(f"\n🔍 Testing Returns Trend (MAIN REQUIREMENT)...")
+        
+        if not self.admin_token:
+            return self.log_result("Returns Trend", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/returns/trend?days=30',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Returns Trend", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # CRITICAL: Must have labels/returns/losses arrays
+            required_keys = ['labels', 'returns', 'losses']
+            has_all_keys = all(key in data for key in required_keys)
+            return self.log_result("Returns Trend", has_all_keys,
+                f"Required arrays present: {[k for k in required_keys if k in data]}")
+        else:
+            return self.log_result("Returns Trend", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_policy_pending(self):
+        """Test GET /api/v2/admin/returns/policy/pending - MAIN REQUIREMENT"""
+        print(f"\n🔍 Testing Policy Pending Approvals (MAIN REQUIREMENT)...")
+        
+        if not self.admin_token:
+            return self.log_result("Policy Pending", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/returns/policy/pending',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Policy Pending", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have pagination structure with items
+            has_structure = "items" in data and "total" in data
+            return self.log_result("Policy Pending", has_structure,
+                f"Found {len(data.get('items', []))} pending approvals")
+        else:
+            return self.log_result("Policy Pending", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_policy_cities(self):
+        """Test GET /api/v2/admin/returns/policy/cities - MAIN REQUIREMENT"""
+        print(f"\n🔍 Testing Policy Cities (MAIN REQUIREMENT)...")
+        
+        if not self.admin_token:
+            return self.log_result("Policy Cities", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'GET', '/v2/admin/returns/policy/cities',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Policy Cities", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have items array
+            has_structure = "items" in data
+            return self.log_result("Policy Cities", has_structure,
+                f"Found {len(data.get('items', []))} city policies")
+        else:
+            return self.log_result("Policy Cities", False,
+                f"Status: {response['status_code']}, Data: {response['data']}")
+
+    def test_policy_run(self):
+        """Test POST /api/v2/admin/returns/policy/run - MAIN REQUIREMENT"""
+        print(f"\n🔍 Testing Policy Engine Run (MAIN REQUIREMENT)...")
+        
+        if not self.admin_token:
+            return self.log_result("Policy Run", False, "No admin token")
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        response, error = self.make_request(
+            'POST', '/v2/admin/returns/policy/run?limit=100',
+            headers=headers,
+            expect_status=200
+        )
+        
+        if error:
+            return self.log_result("Policy Run", False, f"Error: {error}")
+        
+        if response["success"]:
+            data = response["data"]
+            # Should have engine run results
+            required_keys = ['scanned_customers', 'scanned_cities', 'proposed', 'applied', 'approvals_enqueued']
+            has_all_keys = all(key in data for key in required_keys)
+            return self.log_result("Policy Run", has_all_keys,
+                f"Engine results: {data}")
+        else:
+            return self.log_result("Policy Run", False,
                 f"Status: {response['status_code']}, Data: {response['data']}")
 
     def test_ops_dashboard(self):
