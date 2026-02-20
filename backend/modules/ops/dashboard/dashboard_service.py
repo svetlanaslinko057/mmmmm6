@@ -9,6 +9,7 @@ class OpsDashboardService:
         self.db = db
         self.finance = FinanceService(db)
         self.shipping = ShippingAnalyticsService(db)
+        self.returns = ReturnAnalyticsService(db)
         self.orders = db["orders"]
         self.notifs = db["notification_queue"]
         self.customers = db["customers"]
