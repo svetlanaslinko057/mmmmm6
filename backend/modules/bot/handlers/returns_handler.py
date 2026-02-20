@@ -259,3 +259,93 @@ async def cb_returns_resolve(callback: types.CallbackQuery):
     except Exception as e:
         logger.error(f"Error resolving return: {e}")
         await callback.answer(f"Помилка: {e}", show_alert=True)
+
+
+# === Policy approval handlers ===
+
+@router.callback_query(F.data.startswith("policy:approve:"))
+async def cb_policy_approve(callback: types.CallbackQuery):
+    """Approve policy action from Telegram"""
+    from modules.returns.policy_engine import ReturnPolicyEngine
+    from modules.returns.policy_repo import PolicyRepo
+    from modules.returns.policy_types import PolicyDecision
+    
+    dedupe_key_part = callback.data.replace("policy:approve:", "")
+    
+    try:
+        repo = PolicyRepo(db)
+        engine = ReturnPolicyEngine(db)
+        
+        # Find action by partial key
+        action = await db["policy_actions_queue"].find_one(
+            {"dedupe_key": {"$regex": f"^{dedupe_key_part}"}},
+            {"_id": 0}
+        )
+        
+        if not action:
+            await callback.answer("Дію не знайдено", show_alert=True)
+            return
+        
+        if action.get("status") != "PENDING":
+            await callback.answer(f"Дія вже {action.get('status')}", show_alert=True)
+            return
+        
+        dedupe_key = action["dedupe_key"]
+        admin_id = f"tg:{callback.from_user.id}"
+        
+        # Approve
+        await repo.approve_action(dedupe_key, approved_by=admin_id)
+        
+        # Apply
+        decision = PolicyDecision(**action["decision"])
+        await engine.apply_decision(decision, updated_by=admin_id)
+        
+        await callback.answer("✅ Підтверджено та застосовано!", show_alert=True)
+        
+        # Update message
+        await callback.message.edit_text(
+            callback.message.text + f"\n\n✅ <b>Підтверджено</b> @{callback.from_user.username or callback.from_user.id}",
+            parse_mode="HTML"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error approving policy: {e}")
+        await callback.answer(f"Помилка: {e}", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("policy:reject:"))
+async def cb_policy_reject(callback: types.CallbackQuery):
+    """Reject policy action from Telegram"""
+    from modules.returns.policy_repo import PolicyRepo
+    
+    dedupe_key_part = callback.data.replace("policy:reject:", "")
+    
+    try:
+        repo = PolicyRepo(db)
+        
+        # Find action by partial key
+        action = await db["policy_actions_queue"].find_one(
+            {"dedupe_key": {"$regex": f"^{dedupe_key_part}"}},
+            {"_id": 0}
+        )
+        
+        if not action:
+            await callback.answer("Дію не знайдено", show_alert=True)
+            return
+        
+        dedupe_key = action["dedupe_key"]
+        admin_id = f"tg:{callback.from_user.id}"
+        
+        await repo.reject_action(dedupe_key, rejected_by=admin_id)
+        
+        await callback.answer("❌ Відхилено", show_alert=True)
+        
+        # Update message
+        await callback.message.edit_text(
+            callback.message.text + f"\n\n❌ <b>Відхилено</b> @{callback.from_user.username or callback.from_user.id}",
+            parse_mode="HTML"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error rejecting policy: {e}")
+        await callback.answer(f"Помилка: {e}", show_alert=True)
