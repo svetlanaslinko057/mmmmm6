@@ -525,6 +525,13 @@ class YStoreAPITester:
         self.test_pickup_control_mute_ttn()
         self.test_pickup_control_send_reminder()
         
+        # Test O20.3 Return Management Engine
+        self.test_returns_summary()
+        self.test_returns_list()
+        self.test_returns_run()
+        self.test_returns_resolve()
+        self.test_ops_dashboard()
+        
         print("\n" + "=" * 60)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         print("=" * 60)
