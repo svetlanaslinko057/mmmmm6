@@ -29,7 +29,7 @@
     "Basic backend endpoints on localhost (/api/categories, /api/products)"
   ],
   "test_report_links": ["/app/backend_test.py"],
-  "action_item_for_main_agent": "CRITICAL: Fix external URL routing configuration. The REACT_APP_BACKEND_URL (https://svetlanaslinko057-bbbbbb-e4c7.preview.emergentagent.com) is not properly routing /api/* requests to backend port 8001. All backend APIs work on localhost:8001 but fail via external domain. This prevents frontend-backend integration in production environment.",
+  "action_item_for_main_agent": "CRITICAL: Fix external URL routing configuration. The REACT_APP_BACKEND_URL (https://smart-payment-core.preview.emergentagent.com) is not properly routing /api/* requests to backend port 8001. All backend APIs work on localhost:8001 but fail via external domain. This prevents frontend-backend integration in production environment.",
   "updated_files": ["/app/backend_test.py", "/app/backend/modules/returns/return_repo.py"],
   "success_percentage": "Backend: 95% (18/19 tests passed), Frontend: 50% (loads correctly but API integration broken)",
   "should_call_test_agent_after_fix": "true",
