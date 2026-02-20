@@ -326,6 +326,12 @@ const AdminPanel = () => {
         {/* Reviews Tab */}
         {activeTab === 'reviews' && <ReviewsManagement />}
 
+        {/* Returns Tab (O20.4) */}
+        {activeTab === 'returns' && <ReturnsDashboard />}
+
+        {/* Policy Tab (O20.5 & O20.6) */}
+        {activeTab === 'policy' && <PolicyDashboard />}
+
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-2xl p-6 border border-gray-200">
