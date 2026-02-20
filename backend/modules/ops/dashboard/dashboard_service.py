@@ -2,6 +2,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from modules.finance.finance_service import FinanceService
 from modules.ops.analytics.shipping_analytics_service import ShippingAnalyticsService
+from modules.returns.return_analytics import ReturnAnalyticsService
 
 class OpsDashboardService:
     def __init__(self, db: AsyncIOMotorDatabase):
