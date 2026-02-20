@@ -34,6 +34,9 @@ from modules.automation.automation_engine import AutomationEngine
 # O20.2: Pickup Control Handler
 from modules.bot.handlers.pickup_control_handler import router as pickup_control_router
 
+# O20.3: Returns Handler
+from modules.bot.handlers.returns_handler import router as returns_router
+
 # Configure logging - DEBUG level for troubleshooting
 logging.basicConfig(
     level=logging.DEBUG,
