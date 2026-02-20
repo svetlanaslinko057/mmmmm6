@@ -25,15 +25,34 @@ class ReturnRepo:
 
     async def ensure_indexes(self):
         """Create required indexes"""
-        await self.events.create_index("dedupe_key", unique=True)
-        await self.orders.create_index("shipment.ttn")
-        await self.orders.create_index("returns.stage")
-        await self.ledger.create_index(
-            [("order_id", 1), ("type", 1), ("ref", 1)], 
-            unique=True, 
-            sparse=True
-        )
-        await self.alerts.create_index("dedupe_key", unique=True, sparse=True)
+        try:
+            await self.events.create_index("dedupe_key", unique=True)
+        except Exception:
+            pass  # Index already exists
+            
+        try:
+            await self.orders.create_index("shipment.ttn")
+        except Exception:
+            pass  # Index already exists
+            
+        try:
+            await self.orders.create_index("returns.stage")
+        except Exception:
+            pass  # Index already exists
+            
+        try:
+            await self.ledger.create_index(
+                [("order_id", 1), ("type", 1), ("ref", 1)], 
+                unique=True, 
+                sparse=True
+            )
+        except Exception:
+            pass  # Index already exists
+            
+        try:
+            await self.alerts.create_index("dedupe_key", unique=True, sparse=True)
+        except Exception:
+            pass  # Index already exists
 
     async def list_active_shipments(self, limit: int = 500):
         """List orders with active shipments that could be returning"""
