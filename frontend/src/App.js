@@ -40,6 +40,7 @@ import OfferDetail from './pages/OfferDetail';
 import SectionDetail from './pages/SectionDetail';
 import NotFound from './pages/NotFound';
 import PickupControlPage from './pages/PickupControlPage';
+import PaymentResume from './pages/PaymentResume';
 import ScrollToTop from './components/ScrollToTop';
 import FloatingActionButton from './components/FloatingActionButton';
 import analyticsTracker from './services/analyticsTracker';
