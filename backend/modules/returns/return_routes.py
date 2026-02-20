@@ -81,8 +81,7 @@ async def get_risk_customers(
 
 @router.post("/resolve")
 async def resolve_return(
-    order_id: str,
-    notes: Optional[str] = None,
+    request: dict,
     admin: dict = Depends(get_current_admin)
 ):
     """
