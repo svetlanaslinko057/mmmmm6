@@ -3626,6 +3626,19 @@ app.include_router(returns_router, prefix="/api/v2/admin", tags=["Returns Manage
 from modules.returns.policy_routes import router as policy_router
 app.include_router(policy_router, prefix="/api/v2/admin/returns", tags=["Return Policy"])
 
+# D-Mode: Smart Payment Flow routers
+from modules.payments.payments_policy_routes import router as payments_policy_router
+from modules.payments.resume_routes import router as resume_router
+from modules.payments.retry.retry_routes import router as retry_router
+from modules.payments.recovery_analytics_routes import router as recovery_router
+from modules.payments.reconciliation_routes import router as recon_router
+
+app.include_router(payments_policy_router)
+app.include_router(resume_router)
+app.include_router(retry_router)
+app.include_router(recovery_router)
+app.include_router(recon_router)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
