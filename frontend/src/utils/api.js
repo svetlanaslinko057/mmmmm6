@@ -121,3 +121,32 @@ export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
   getStats: () => api.get('/admin/stats'),
 };
+
+// Returns API (O20.3 & O20.4)
+export const returnsAPI = {
+  getSummary: () => api.get('/v2/admin/returns/summary'),
+  getTrend: (days = 30) => api.get('/v2/admin/returns/trend', { params: { days } }),
+  getList: (skip = 0, limit = 20, stage = null) => {
+    const params = { skip, limit };
+    if (stage) params.stage = stage;
+    return api.get('/v2/admin/returns/list', { params });
+  },
+  resolve: (orderId, notes = null) => api.post('/v2/admin/returns/resolve', { order_id: orderId, notes }),
+  findByTtn: (ttn) => api.post('/v2/admin/returns/find', { ttn }),
+  run: (limit = 500) => api.post('/v2/admin/returns/run', null, { params: { limit } }),
+  getRiskCustomers: (limit = 20) => api.get('/v2/admin/returns/risk-customers', { params: { limit } }),
+};
+
+// Policy API (O20.5 & O20.6)
+export const policyAPI = {
+  getPending: (skip = 0, limit = 50) => api.get('/v2/admin/returns/policy/pending', { params: { skip, limit } }),
+  getHistory: (skip = 0, limit = 50) => api.get('/v2/admin/returns/policy/history', { params: { skip, limit } }),
+  getCities: () => api.get('/v2/admin/returns/policy/cities'),
+  approve: (dedupeKey) => api.post('/v2/admin/returns/policy/approve', { dedupe_key: dedupeKey }),
+  reject: (dedupeKey) => api.post('/v2/admin/returns/policy/reject', { dedupe_key: dedupeKey }),
+  manual: (targetType, targetId, action, reason = 'MANUAL') => 
+    api.post('/v2/admin/returns/policy/manual', { target_type: targetType, target_id: targetId, action, reason }),
+  getCustomer: (phone) => api.get(`/v2/admin/returns/policy/customer/${phone}`),
+  removeCity: (city) => api.delete(`/v2/admin/returns/policy/city/${encodeURIComponent(city)}`),
+  run: (limit = 500) => api.post('/v2/admin/returns/policy/run', null, { params: { limit } }),
+};
