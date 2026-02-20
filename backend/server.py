@@ -3618,6 +3618,10 @@ app.include_router(analytics_router, prefix="/api/v2/admin", tags=["Analytics In
 from modules.pickup_control.pickup_routes import router as pickup_control_router
 app.include_router(pickup_control_router, prefix="/api/v2/admin", tags=["Pickup Control"])
 
+# O20.3: Return Management router
+from modules.returns.return_routes import router as returns_router
+app.include_router(returns_router, prefix="/api/v2/admin", tags=["Returns Management"])
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
