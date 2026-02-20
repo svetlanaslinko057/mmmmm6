@@ -109,27 +109,56 @@ class ReturnAnalyticsService:
             "top_cities_30d": top_cities
         }
 
-    async def daily_trend(self, days: int = 30) -> list:
-        """Get daily return trend"""
+    async def daily_trend(self, days: int = 30) -> dict:
+        """Get daily return trend with labels for charts"""
         since = self._since(days)
         
-        pipeline = [
+        # Returns per day
+        pipeline_returns = [
             {"$match": {
                 "returns.updated_at": {"$gte": since},
                 "returns.stage": {"$in": ["RETURNING", "RETURNED"]}
             }},
-            {"$addFields": {
-                "day": {"$substr": ["$returns.updated_at", 0, 10]}
-            }},
-            {"$group": {
-                "_id": "$day",
-                "count": {"$sum": 1},
-                "amount": {"$sum": {"$ifNull": ["$totals.grand", "$total_amount"]}}
-            }},
+            {"$addFields": {"day": {"$substr": ["$returns.updated_at", 0, 10]}}},
+            {"$group": {"_id": "$day", "count": {"$sum": 1}}},
             {"$sort": {"_id": 1}}
         ]
         
-        return [r async for r in self.orders.aggregate(pipeline)]
+        returns_map = {}
+        async for r in self.orders.aggregate(pipeline_returns):
+            returns_map[r["_id"]] = int(r["count"])
+        
+        # Losses per day
+        pipeline_losses = [
+            {"$match": {
+                "type": {"$in": ["SHIP_COST_OUT", "RETURN_COST_OUT"]},
+                "created_at": {"$gte": since}
+            }},
+            {"$addFields": {"day": {"$substr": ["$created_at", 0, 10]}}},
+            {"$group": {"_id": "$day", "amount": {"$sum": "$amount"}}},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        losses_map = {}
+        async for r in self.ledger.aggregate(pipeline_losses):
+            losses_map[r["_id"]] = float(r["amount"])
+        
+        # Fill all days
+        start = datetime.now(timezone.utc) - timedelta(days=days-1)
+        labels, returns, losses = [], [], []
+        
+        for i in range(days):
+            d = (start + timedelta(days=i)).date().isoformat()
+            labels.append(d)
+            returns.append(returns_map.get(d, 0))
+            losses.append(round(losses_map.get(d, 0), 2))
+        
+        return {
+            "days": days,
+            "labels": labels,
+            "returns": returns,
+            "losses": losses
+        }
 
     async def risk_customers(self, limit: int = 20) -> list:
         """Get customers with high return rate"""
