@@ -561,9 +561,8 @@ class YStoreAPITester:
         test_order_id = "test-order-123"  # Test order ID
         
         response, error = self.make_request(
-            'POST', '/v2/admin/returns/resolve',
+            'POST', f'/v2/admin/returns/resolve?order_id={test_order_id}',
             data={
-                "order_id": test_order_id,
                 "notes": "Test resolution"
             },
             headers=headers,
