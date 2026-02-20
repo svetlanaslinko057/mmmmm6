@@ -1,39 +1,52 @@
 # Y-Store Marketplace - PRD
 
 ## Original Problem Statement
-Підняти Y-Store e-commerce маркетплейс, імплементувати:
-- O20.3-O20.6 Return Management Engine + Policy Control
-- D-Mode Smart Payment Flow (Revenue Protection)
+Y-Store e-commerce маркетплейс з повним функціоналом управління поверненнями, payment risk protection та Fondy payment gateway.
 
 ## Architecture
 - **Frontend**: React 19, TailwindCSS, Recharts
 - **Backend**: FastAPI, MongoDB (Motor)
 - **Bot**: Aiogram 3.x @YStore_a_bot
-- **Payments**: Fondy (mock ready for production)
+- **Payments**: Fondy (PRODUCTION - Merchant ID: 1558123)
 
 ## What's Been Implemented
 
-### Session 2026-02-20
+### Session 2026-02-20 (Latest)
 
-#### O20.3 Return Management Engine ✅
+#### Production Fondy Integration ✅
+- **Files**: `/app/backend/modules/payments/fondy_*.py`, `/app/backend/modules/payments/providers/fondy/`
+- Signature verification (SHA-1)
+- Payment creation with checkout URL
+- Webhook handler with anti-replay, idempotency
+- Status check by order_id
+- **Webhook URL**: `https://smart-payment-core.preview.emergentagent.com/api/v2/payments/webhook/fondy`
+
+#### Frontend Login Fix ✅
+- Fixed "Invalid Host Header" in craco.config.js
+- Added admin password_hash to database
+- Cookie/language modal handled properly
+
+---
+
+### O20.3 Return Management Engine ✅
 - Return detection from NP statuses
 - Ledger losses (SHIP_COST_OUT, RETURN_COST_OUT, SALE_LOST)
 - CRM counters + auto RISK/BLOCK_COD segmentation
 - Telegram alerts
 - API: /returns/summary, /list, /run, /resolve, /find, /trend
 
-#### O20.4 Return Dashboard UI ✅
-- `/app/frontend/src/components/admin/ReturnsDashboard.js`
+### O20.4 Return Dashboard UI ✅
+- `/app/frontend/src/pages/admin/ReturnsDashboard.jsx`
 - KPI cards, trend charts, reasons/cities bars, returns table
 - Tab "Повернення" in AdminPanel
 
-#### O20.5 Return Policy Engine ✅
+### O20.5 Return Policy Engine ✅
 - Rules: COD refusals → BLOCK_COD, Returns → REQUIRE_PREPAID
 - City-level policies (return rate >= 15%)
 - Approval queue + Telegram alerts
 - VIP softening
 
-#### O20.6 Policy Control Center ✅
+### O20.6 Policy Control Center ✅
 - Admin UI for pending approvals
 - City policies management, manual override
 - History + Audit log, Tab "Policy" in AdminPanel
@@ -44,21 +57,16 @@
 
 #### D/Step 1: Payment Policy Decider
 - `PaymentPolicyDecider` - determines FULL_PREPAID / SHIP_DEPOSIT / COD_ALLOWED
-- Evaluates: customer segment, returns_60d, cod_refusals_30d, city policy, amount
 - API: `POST /api/v2/payments/policy/preview`
 
 #### D/Step 2: Smart Retry Flow
 - Auto-reminders: 15min, 60min, 24h auto-cancel
-- Channels: Telegram → SMS → Email
-- Idempotent via dedupe keys
-- API: `POST /api/v2/admin/payments/retry/run`
 - Scheduler: every 5 minutes
+- API: `POST /api/v2/admin/payments/retry/run`
 
 #### D/Step 3: Payment Resume Page
 - Frontend: `/payment/resume/:orderId`
 - Auto-redirect to payment if `?auto=1`
-- Recreate expired payment intents
-- Countdown urgency timer
 - API: `/api/v2/payments/resume/{orderId}`, `/recreate`
 
 #### D/Step 4: Conversion Booster Pack
@@ -68,33 +76,22 @@
 
 #### D/Step 5: Recovery Analytics
 - Track orders saved by retry/resume flow
-- revenue_recovered, recovery_rate
 - API: `/api/v2/admin/payments/recovery/summary`, `/trend`
 
 #### D/Step 6: Payment Reconciliation
 - Polls payment provider for stuck orders
-- Fixes missed webhooks
 - Scheduler: every 10 minutes
 - API: `/api/v2/admin/payments/reconciliation/run`
 
 ---
 
-## D-Mode Decision Matrix
+## Key API Endpoints
 
-| Signal | Result |
-|--------|--------|
-| segment == BLOCK_COD | FULL_PREPAID |
-| cod_refusals_30d >= 2 | FULL_PREPAID |
-| returns_60d >= 3 | FULL_PREPAID |
-| city.require_prepaid | FULL_PREPAID |
-| returns_60d >= 2 | SHIP_DEPOSIT |
-| NEW + amount >= 8000 | SHIP_DEPOSIT |
-| VIP | Soften 1 level |
-| else | COD_ALLOWED |
-
----
-
-## API Endpoints Summary
+### Fondy Payments
+- `GET /api/v2/payments/webhook/fondy/health` - Health check
+- `POST /api/v2/payments/webhook/fondy` - Webhook callback
+- `POST /api/v2/payments/checkout` - Create payment checkout
+- `GET /api/v2/payments/status/{order_id}` - Get payment status
 
 ### Returns
 - `GET /api/v2/admin/returns/summary`
@@ -108,38 +105,28 @@
 - `GET /api/v2/admin/returns/policy/cities`
 - `POST /api/v2/admin/returns/policy/approve`
 - `POST /api/v2/admin/returns/policy/reject`
-- `POST /api/v2/admin/returns/policy/run`
-
-### D-Mode Payments
-- `POST /api/v2/payments/policy/preview`
-- `POST /api/v2/payments/deposit/create`
-- `POST /api/v2/payments/full/create`
-- `GET /api/v2/payments/resume/{order_id}`
-- `POST /api/v2/payments/resume/{order_id}/recreate`
-- `POST /api/v2/admin/payments/retry/run`
-- `GET /api/v2/admin/payments/recovery/summary`
-- `POST /api/v2/admin/payments/reconciliation/run`
 
 ---
 
-## Bot Commands
-- `/returns_today`, `/returns_risk`, `/return_find <ttn>`
-- `/pickup_today`, `/pickup_risk`, `/pickup_find <ttn>`
-- Policy inline buttons (approve/reject)
+## Test Credentials
+- **Admin**: admin@ystore.ua / admin123
 
 ## Environment
-- Backend: localhost:8001
-- Frontend: localhost:3000
-- MongoDB: localhost:27017
-- Bot: @YStore_a_bot
+- **Backend**: localhost:8001
+- **Frontend**: localhost:3000
+- **MongoDB**: localhost:27017
+- **Preview URL**: https://smart-payment-core.preview.emergentagent.com
 
-## Next Action Items
-1. Integrate real Fondy payment provider
-2. Add Prepaid Discount (1-2% for online payment)
-3. Payment Health Dashboard in Admin
+---
 
-## Backlog
+## Next Action Items (P1)
+1. ✅ ~~Production Fondy Integration~~
+2. Payment Health Dashboard (admin panel)
+3. Enable Prepaid Discount (env vars PREPAID_DISCOUNT_MODE, PREPAID_DISCOUNT_VALUE)
+
+## Backlog (P2)
 - Fraud Shield (scoring system)
-- COD Dynamic Limit by amount
-- City Risk Heatmap
-- Viber/SMS fallback notifications
+- Dynamic COD Limit
+- Auto-approve COD for trusted customers
+- City Risk Heatmap UI
+- Telegram broadcast_wizard bug fix
