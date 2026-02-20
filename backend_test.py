@@ -806,6 +806,13 @@ class YStoreAPITester:
         self.test_returns_list()
         self.test_returns_run()
         self.test_returns_resolve()
+        
+        # Test O20.4-O20.6 NEW REQUIREMENTS
+        self.test_returns_trend()
+        self.test_policy_pending() 
+        self.test_policy_cities()
+        self.test_policy_run()
+        
         self.test_ops_dashboard()
         
         print("\n" + "=" * 60)
