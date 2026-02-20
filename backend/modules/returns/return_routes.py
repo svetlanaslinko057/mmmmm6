@@ -90,6 +90,12 @@ async def resolve_return(
     """
     from datetime import datetime, timezone
     
+    order_id = request.get("order_id")
+    notes = request.get("notes")
+    
+    if not order_id:
+        return {"ok": False, "error": "order_id is required"}
+    
     result = await db["orders"].update_one(
         {"id": order_id},
         {"$set": {
