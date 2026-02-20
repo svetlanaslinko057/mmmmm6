@@ -596,8 +596,13 @@ class YStoreAPITester:
         
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
+        # Get current date for range parameters
+        from datetime import datetime, timedelta
+        to_date = datetime.now().strftime('%Y-%m-%d')
+        from_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        
         response, error = self.make_request(
-            'GET', '/v2/admin/ops/dashboard',
+            'GET', f'/v2/admin/ops/dashboard?from={from_date}&to={to_date}',
             headers=headers,
             expect_status=200
         )
