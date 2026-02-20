@@ -95,6 +95,7 @@ function App() {
                           <Route path="/seller/dashboard" element={<SellerDashboard />} />
                           <Route path="/admin" element={<AdminPanel />} />
                           <Route path="/admin/pickup-control" element={<PickupControlPage />} />
+                          <Route path="/payment/resume/:orderId" element={<PaymentResume />} />
                           <Route path="/profile" element={<UserProfile />} />
                           <Route path="/contact" element={<ContactInfo />} />
                           <Route path="/delivery-payment" element={<DeliveryPayment />} />
