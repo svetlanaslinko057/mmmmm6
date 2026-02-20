@@ -3622,6 +3622,10 @@ app.include_router(pickup_control_router, prefix="/api/v2/admin", tags=["Pickup 
 from modules.returns.return_routes import router as returns_router
 app.include_router(returns_router, prefix="/api/v2/admin", tags=["Returns Management"])
 
+# O20.5: Return Policy router
+from modules.returns.policy_routes import router as policy_router
+app.include_router(policy_router, prefix="/api/v2/admin/returns", tags=["Return Policy"])
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
